@@ -15,7 +15,7 @@ class RightExample(Node):
         future = self._client.call_async(request)
         rclpy.spin_until_future_complete(self, future)
         response: IdentifyPayload.Response = future.result()
-        print(response.mass)
+        print('mass: ',  response.mass)
 
 
 def main(args=None):
