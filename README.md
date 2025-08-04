@@ -1,4 +1,4 @@
-# orca_lowlevel_sdk_demo
+# orca_upper_body_example
 
 ## Install
 
