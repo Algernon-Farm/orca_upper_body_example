@@ -9,7 +9,7 @@
 ```text
 .
 ├── LICENSE     
-├── motor_control
+├── motor_control                           # motor control example 
 │   ├── controller2robot.py                 # example of sending commands to the robot from a controller
 │   ├── lowlevel_sdk                        # definitions of LCM types for the robot
 │   │   ├── cyan_armwaisthead_cmd_lcmt.py   
