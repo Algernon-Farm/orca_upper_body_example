@@ -22,14 +22,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Simulates the robot's state and sends it to the controller.
-'''
+"""
 
+import time
+
+import lcm
 
 from lowlevel_sdk.cyan_armwaisthead_data_lcmt import cyan_armwaisthead_data_lcmt
-import lcm
-import time
 
 
 msg = cyan_armwaisthead_data_lcmt()
@@ -41,6 +42,7 @@ while True:
     start_time = time.time()
     lc.publish("robot2controller_ahw", msg.encode())
 
+    # make it a 1000hz loop
     end_time = time.time()
     if (end_time - start_time) < 0.001:
         time.sleep(0.001 - (end_time - start_time))
