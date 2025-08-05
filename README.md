@@ -12,7 +12,7 @@
 
 ```text
 .
-├── cy_arm_controller_example
+├── cy_arm_controller_example               # example code for solving inverse kinematics 
 │   ├── assets
 │   │   └── picture01.png
 │   ├── cy_arm_controller_example
@@ -21,7 +21,7 @@
 │   │   └── right_example.py
 │   ├── package.xml
 │   ├── README.md
-├── cy_robot_dynamics_example
+├── cy_robot_dynamics_example               # example code for identifying payload
 │   ├── assets
 │   │   └── picture01.png
 │   ├── cy_robot_dynamics_example
@@ -40,3 +40,15 @@
 │   └── robot2controller.py                 # example of sending data from the robot to a controller
 └── README.md
 ```
+
+## cy_arm_controller_example
+
+Example code for solving inverse kinematics
+
+## cy_robot_dynamics_example
+
+Example code for identifying payload
+
+## motor_controller
+
+Example code for sending and receiving upperbody joint-level commands to/from the robot.
