@@ -38,6 +38,8 @@ Example code for sending and receiving upperbody joint-level commands to/from th
 
 cur_ahw_q = None
 
+MOVE_BACK_TO_NOMINAL = False #NOTE: set to true to move the robot arm back to nominal pose after setting a random pose
+
 #
 # localhost: lcm_ins = lcm.LCM()
 # Multiple hosts: UDP Multicast Setup see https://lcm-proj.github.io/lcm/content/multicast-setup.html
@@ -60,24 +62,24 @@ def controller2robot_example():
 
     target_pos = np.array(
         [
-            0.15,
-            0.15,
+            -0.2,
+            0.3,
+            -1.0,
+            0.4,
+            0.8,
+            0.1,
+            -0.4,
+            -0.2,
             1.0,
             0.15,
+            0.4,
+            0.2,
+            -0.4,
             0.15,
-            0.15,
-            0.15,
-            -0.15,
-            1.0,
-            0.15,
-            -0.15,
-            0.15,
-            0.15,
-            0.15,
-            0.15,
-            0.15,
-            0.0,
-            0.0,
+            -0.3,
+            0.15,   # right arm 1
+            0.0,    # not in use
+            0.0,    # not in use
         ]
     )
     _, t_curv_q, t_curv_qd, _ = interpolate_t_curve(np.array(cur_ahw_q), target_pos, 18)
@@ -102,27 +104,30 @@ def controller2robot_example():
         if (end_time - start_time) < 0.001:
             time.sleep(0.001 - (end_time - start_time))
 
-    _, t_curv_q, t_curv_qd, _ = interpolate_t_curve(target_pos, np.zeros(18), 18)
-    for i in range(len(t_curv_q)):
-        start_time = time.time()
-        lcm_msg = cyan_armwaisthead_cmd_lcmt()
-        # left arm(0~5), right arm(6~11), waist(12), head(13~15)
-        # shoulder -> hand
-        lcm_msg.q_des = t_curv_q[i]  # desired motor position
-        lcm_msg.qd_des = t_curv_qd[i]  # desired motor velocity
-        lcm_msg.qd_des[13:16] = [0.0, 0.0, 0.0]
-        lcm_msg.kp_joint = [50.0] * 18  # motor kp
-        lcm_msg.kp_joint[13:16] = [10.0, 10.0, 10.0]  # head kp
-        lcm_msg.kd_joint = [1.0] * 18  # motor kd
-        lcm_msg.kd_joint[13:16] = [0.2, 0.2, 0.2]  # head kd
-        lcm_ins.publish("controller2robot_ahw", lcm_msg.encode())
 
-        # make it a 1000hz loop
-        # NOTE: this is not the best way to do this as we are using python
-        end_time = time.time()
+    # NOTE: to move the arm back to the nominal pose 
+    if MOVE_BACK_TO_NOMINAL:
+        _, t_curv_q, t_curv_qd, _ = interpolate_t_curve(target_pos, np.zeros(18), 18)
+        for i in range(len(t_curv_q)):
+            start_time = time.time()
+            lcm_msg = cyan_armwaisthead_cmd_lcmt()
+            # left arm(0~5), right arm(6~11), waist(12), head(13~15)
+            # shoulder -> hand
+            lcm_msg.q_des = t_curv_q[i]  # desired motor position
+            lcm_msg.qd_des = t_curv_qd[i]  # desired motor velocity
+            lcm_msg.qd_des[13:16] = [0.0, 0.0, 0.0]
+            lcm_msg.kp_joint = [50.0] * 18  # motor kp
+            lcm_msg.kp_joint[13:16] = [10.0, 10.0, 10.0]  # head kp
+            lcm_msg.kd_joint = [1.0] * 18  # motor kd
+            lcm_msg.kd_joint[13:16] = [0.2, 0.2, 0.2]  # head kd
+            lcm_ins.publish("controller2robot_ahw", lcm_msg.encode())
 
-        if (end_time - start_time) < 0.001:
-            time.sleep(0.001 - (end_time - start_time))
+            # make it a 1000hz loop
+            # NOTE: this is not the best way to do this as we are using python
+            end_time = time.time()
+
+            if (end_time - start_time) < 0.001:
+                time.sleep(0.001 - (end_time - start_time))
 
 
 def callback(channel: str, data: cyan_armwaisthead_data_lcmt):
