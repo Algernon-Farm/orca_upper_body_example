@@ -134,7 +134,7 @@ def callback(channel: str, data: cyan_armwaisthead_data_lcmt):
     global cur_ahw_q
     msg = cyan_armwaisthead_data_lcmt.decode(data)
     cur_ahw_q = msg.q
-    print(f"received q: {msg.q}\nqd: {msg.qd}\ntau: {msg.tauIq}\n")
+    # print(f"received q: {msg.q}\nqd: {msg.qd}\ntau: {msg.tauIq}\n")
 
 
 def main():
