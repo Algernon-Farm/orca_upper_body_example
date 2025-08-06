@@ -37,7 +37,8 @@
 │   │   ├── cyan_armwaisthead_cmd_lcmt.py   
 │   │   ├── cyan_armwaisthead_data_lcmt.py
 │   │   └── __init__.py
-│   └── robot2controller.py                 # example of sending data from the robot to a controller
+│   ├── robot2controller.py                 # example of sending data from the robot to a controller
+│   └── t_curve_planner.py                  # 
 └── README.md
 ```
 

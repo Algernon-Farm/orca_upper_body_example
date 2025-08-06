@@ -26,15 +26,17 @@ import time
 import threading
 
 import lcm
+import numpy as np
 
 from lowlevel_sdk.cyan_armwaisthead_cmd_lcmt import cyan_armwaisthead_cmd_lcmt
 from lowlevel_sdk.cyan_armwaisthead_data_lcmt import cyan_armwaisthead_data_lcmt
+from t_curve_planner import interpolate_t_curve
 
-
-'''
+"""
 Example code for sending and receiving upperbody joint-level commands to/from the robot.
-'''
+"""
 
+cur_ahw_q = None
 
 #
 # localhost: lcm_ins = lcm.LCM()
@@ -52,33 +54,86 @@ def lcm_handle():
 
 def controller2robot_example():
     """send motor position commands to robot"""
-    while True:
-        for i in range(1000):
-            start_time = time.time()
-            msg = cyan_armwaisthead_cmd_lcmt()
-            # left arm(0~5), right arm(6~11), waist(12), head(13~15)
-            # shoulder -> hand
-            msg.q_des = [0.0 for i in range(18)]  # desired motor position
-            msg.qd_des = [0.0 for i in range(18)]  # desired motor velocity
-            msg.kp_joint = [0.0 for i in range(18)]  # motor kp
-            msg.kd_joint = [0.0 for i in range(18)]  # motor kd
-            lcm_ins.publish("controller2robot_ahw", msg.encode())
+    while cur_ahw_q is None:
+        time.sleep(0.1)
+        print("waiting for robot to be ready")
 
-            # make it a 1000hz loop
-            # NOTE: this is not the best way to do this as we are using python
-            end_time = time.time()
+    target_pos = np.array(
+        [
+            0.15,
+            0.15,
+            1.0,
+            0.15,
+            0.15,
+            0.15,
+            0.15,
+            -0.15,
+            1.0,
+            0.15,
+            -0.15,
+            0.15,
+            0.15,
+            0.15,
+            0.15,
+            0.15,
+            0.0,
+            0.0,
+        ]
+    )
+    _, t_curv_q, t_curv_qd, _ = interpolate_t_curve(np.array(cur_ahw_q), target_pos, 18)
+    for i in range(len(t_curv_q)):
+        start_time = time.time()
+        lcm_msg = cyan_armwaisthead_cmd_lcmt()
+        # left arm(0~5), right arm(6~11), waist(12), head(13~15)
+        # shoulder -> hand
+        lcm_msg.q_des = t_curv_q[i]  # desired motor position
+        lcm_msg.qd_des = t_curv_qd[i]  # desired motor velocity
+        lcm_msg.qd_des[13:16] = [0.0, 0.0, 0.0]
+        lcm_msg.kp_joint = [50.0] * 18  # motor kp
+        lcm_msg.kp_joint[13:16] = [10.0, 10.0, 10.0]  # head kp
+        lcm_msg.kd_joint = [1.0] * 18  # motor kd
+        lcm_msg.kd_joint[13:16] = [0.2, 0.2, 0.2]  # head kd
+        lcm_ins.publish("controller2robot_ahw", lcm_msg.encode())
 
-            if (end_time - start_time) < 0.001:
-                time.sleep(0.001 - (end_time - start_time))
+        # make it a 1000hz loop
+        # NOTE: this is not the best way to do this as we are using python
+        end_time = time.time()
+
+        if (end_time - start_time) < 0.001:
+            time.sleep(0.001 - (end_time - start_time))
+
+    _, t_curv_q, t_curv_qd, _ = interpolate_t_curve(target_pos, np.zeros(18), 18)
+    for i in range(len(t_curv_q)):
+        start_time = time.time()
+        lcm_msg = cyan_armwaisthead_cmd_lcmt()
+        # left arm(0~5), right arm(6~11), waist(12), head(13~15)
+        # shoulder -> hand
+        lcm_msg.q_des = t_curv_q[i]  # desired motor position
+        lcm_msg.qd_des = t_curv_qd[i]  # desired motor velocity
+        lcm_msg.qd_des[13:16] = [0.0, 0.0, 0.0]
+        lcm_msg.kp_joint = [50.0] * 18  # motor kp
+        lcm_msg.kp_joint[13:16] = [10.0, 10.0, 10.0]  # head kp
+        lcm_msg.kd_joint = [1.0] * 18  # motor kd
+        lcm_msg.kd_joint[13:16] = [0.2, 0.2, 0.2]  # head kd
+        lcm_ins.publish("controller2robot_ahw", lcm_msg.encode())
+
+        # make it a 1000hz loop
+        # NOTE: this is not the best way to do this as we are using python
+        end_time = time.time()
+
+        if (end_time - start_time) < 0.001:
+            time.sleep(0.001 - (end_time - start_time))
 
 
 def callback(channel: str, data: cyan_armwaisthead_data_lcmt):
     """
     subscribe motor position data from robot
     :param channel: robot2controller_ahw
-    :param data: cyan_armwaisthead_data_lcmt 
+    :param data: cyan_armwaisthead_data_lcmt
     """
+    global cur_ahw_q
     msg = cyan_armwaisthead_data_lcmt.decode(data)
+    cur_ahw_q = msg.q
     print(f"received q: {msg.q}\nqd: {msg.qd}\ntau: {msg.tauIq}\n")
 
 
